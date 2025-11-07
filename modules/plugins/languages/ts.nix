@@ -46,6 +46,7 @@ let
     };
 
     vtsls = {
+      root_markers = [ "package.json" ];
       package = pkgs.vtsls;
       lspConfig =
         # lua
