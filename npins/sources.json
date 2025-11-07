@@ -1888,10 +1888,10 @@
         "repo": "nvim-lspconfig"
       },
       "branch": "master",
-      "submodules": false,
-      "revision": "db8fef885009fdec0daeff3e5dda92e1f539611e",
-      "url": "https://github.com/neovim/nvim-lspconfig/archive/db8fef885009fdec0daeff3e5dda92e1f539611e.tar.gz",
-      "hash": "04ji3265bddlfqrb6gpv402nm078xwp4gbk03z3xh9cl1k7k1n2d"
+      "submodules": false,      
+      "revision": "3db16ceeea947517f0dc1404c24dcb5ab0c91d26",
+      "url": "https://github.com/neovim/nvim-lspconfig/archive/3db16ceeea947517f0dc1404c24dcb5ab0c91d26.tar.gz",
+      "hash": "0gam1rxqkxksayblhj1i7jkh4sqjp6lpvyb1psmrhkryj6967ir2"
     },
     "nvim-metals": {
       "type": "Git",
