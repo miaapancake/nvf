@@ -31,9 +31,7 @@ let
       lspConfig =
         # lua
         ''
-          local vue_language_server_path = '${
-            pkgs.vue-language-server + "/lib/node_modules/@vue/language-server"
-          }'
+          local vue_language_server_path = '${cfg.lsp.vue-package + "/lib/node_modules/@vue/language-server"}'
 
           local vue_plugin = {
               name = '@vue/typescript-plugin',
@@ -70,9 +68,7 @@ let
       lspConfig =
         # lua
         ''
-          local vue_language_server_path = '${
-            pkgs.vue-language-server + "/lib/node_modules/@vue/language-server"
-          }'
+          local vue_language_server_path = '${cfg.lsp.vue-package + "/lib/node_modules/@vue/language-server"}'
           local vue_plugin = {
             name = '@vue/typescript-plugin',
             location = vue_language_server_path,
@@ -219,6 +215,13 @@ in
         example = ''[lib.getExe pkgs.jdt-language-server "-data" "~/.cache/jdtls/workspace"]'';
         type = either package (listOf str);
         default = servers.${cfg.lsp.server}.package;
+      };
+
+      vue-package = mkOption {
+        description = "Typescript/Javascript LSP server package, or the command to run as a list of strings";
+        example = ''[lib.getExe pkgs.jdt-language-server "-data" "~/.cache/jdtls/workspace"]'';
+        type = either package (listOf str);
+        default = pkgs.vue_language_server;
       };
     };
 
