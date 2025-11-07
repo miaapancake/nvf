@@ -221,7 +221,7 @@ in
         description = "Typescript/Javascript LSP server package, or the command to run as a list of strings";
         example = ''[lib.getExe pkgs.jdt-language-server "-data" "~/.cache/jdtls/workspace"]'';
         type = either package (listOf str);
-        default = pkgs.vue_language_server;
+        default = pkgs.vue-language-server;
       };
     };
 
