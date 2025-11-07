@@ -3,13 +3,21 @@
   pkgs,
   lib,
   ...
-}: let
+}:
+let
   inherit (builtins) attrNames;
   inherit (lib.options) mkEnableOption mkOption;
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.lists) isList;
   inherit (lib.meta) getExe;
-  inherit (lib.types) enum either listOf package str bool;
+  inherit (lib.types)
+    enum
+    either
+    listOf
+    package
+    str
+    bool
+    ;
   inherit (lib.nvim.lua) expToLua toLuaObject;
   inherit (lib.nvim.types) mkGrammarOption diagnostics mkPluginSetupOption;
   inherit (lib.nvim.dag) entryAnywhere;
@@ -28,12 +36,61 @@
             client.server_capabilities.documentFormattingProvider = false;
           end,
           cmd = ${
-          if isList cfg.lsp.package
-          then expToLua cfg.lsp.package
-          else ''{"${cfg.lsp.package}/bin/typescript-language-server", "--stdio"}''
-        }
+            if isList cfg.lsp.package then
+              expToLua cfg.lsp.package
+            else
+              ''{"${cfg.lsp.package}/bin/typescript-language-server", "--stdio"}''
+          }
         }
       '';
+    };
+
+    vtsls = {
+      package = pkgs.vtsls;
+      lspConfig =
+        # lua
+        ''
+          local vue_language_server_path = '${
+            pkgs.vue-language-server + "/lib/node_modules/@vue/language-server"
+          }'
+          local vue_plugin = {
+            name = '@vue/typescript-plugin',
+            location = vue_language_server_path,
+            languages = { 'vue' },
+            configNamespace = 'typescript',
+          }
+          --- lsconfig method doesn't work in nvf, it says
+          --- it cannot find vue_ls or vtsls config.md
+          --- Using it this way means they're always enabled configs
+          vim.lsp.config("vtsls", {
+            capabilities = capabilities,
+            on_attach = function(client, bufnr)
+              attach_keymaps(client, bufnr);
+              -- TODO: do we need to disable formatting for this LS?
+              client.server_capabilities.documentFormattingProvider = false;
+            end,
+            filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+            settings = {
+              vtsls = {
+                tsserver = {
+                  globalPlugins = {
+                    vue_plugin,
+                  }
+                }
+              }
+            },
+            cmd = ${
+              if isList cfg.lsp.package then
+                expToLua cfg.lsp.package
+              else
+                ''{"${cfg.lsp.package}/bin/vtsls", "--stdio"}''
+            },
+          })
+          vim.lsp.config('vue_ls', {
+            cmd = {"${getExe pkgs.vue-language-server}", "--stdio"}
+          })
+          vim.lsp.enable({'vtsls', 'vue_ls'})
+        '';
     };
 
     denols = {
@@ -44,10 +101,11 @@
           capabilities = capabilities;
           on_attach = attach_keymaps,
           cmd = ${
-          if isList cfg.lsp.package
-          then expToLua cfg.lsp.package
-          else ''{"${cfg.lsp.package}/bin/deno", "lsp"}''
-        }
+            if isList cfg.lsp.package then
+              expToLua cfg.lsp.package
+            else
+              ''{"${cfg.lsp.package}/bin/deno", "lsp"}''
+          }
         }
       '';
     };
@@ -62,10 +120,11 @@
           capabilities = capabilities;
           on_attach = attach_keymaps,
           cmd = ${
-          if isList cfg.lsp.package
-          then expToLua cfg.lsp.package
-          else ''{"${cfg.lsp.package}/bin/typescript-language-server", "--stdio"}''
-        }
+            if isList cfg.lsp.package then
+              expToLua cfg.lsp.package
+            else
+              ''{"${cfg.lsp.package}/bin/typescript-language-server", "--stdio"}''
+          }
         }
       '';
     };
@@ -88,39 +147,46 @@
   };
 
   # TODO: specify packages
-  defaultDiagnosticsProvider = ["eslint_d"];
+  defaultDiagnosticsProvider = [ "eslint_d" ];
   diagnosticsProviders = {
-    eslint_d = let
-      pkg = pkgs.eslint_d;
-    in {
-      package = pkg;
-      config = {
-        cmd = getExe pkg;
-        required_files = [
-          "eslint.config.js"
-          "eslint.config.mjs"
-          ".eslintrc"
-          ".eslintrc.cjs"
-          ".eslintrc.json"
-          ".eslintrc.js"
-          ".eslintrc.yml"
-        ];
+    eslint_d =
+      let
+        pkg = pkgs.eslint_d;
+      in
+      {
+        package = pkg;
+        config = {
+          cmd = getExe pkg;
+          required_files = [
+            "eslint.config.js"
+            "eslint.config.mjs"
+            ".eslintrc"
+            ".eslintrc.cjs"
+            ".eslintrc.json"
+            ".eslintrc.js"
+            ".eslintrc.yml"
+          ];
+        };
       };
-    };
   };
-in {
+in
+{
   _file = ./ts.nix;
   options.vim.languages.ts = {
     enable = mkEnableOption "Typescript/Javascript language support";
 
     treesitter = {
-      enable = mkEnableOption "Typescript/Javascript treesitter" // {default = config.vim.languages.enableTreesitter;};
+      enable = mkEnableOption "Typescript/Javascript treesitter" // {
+        default = config.vim.languages.enableTreesitter;
+      };
       tsPackage = mkGrammarOption pkgs "tsx";
       jsPackage = mkGrammarOption pkgs "javascript";
     };
 
     lsp = {
-      enable = mkEnableOption "Typescript/Javascript LSP support" // {default = config.vim.lsp.enable;};
+      enable = mkEnableOption "Typescript/Javascript LSP support" // {
+        default = config.vim.lsp.enable;
+      };
 
       server = mkOption {
         description = "Typescript/Javascript LSP server to use";
@@ -137,7 +203,9 @@ in {
     };
 
     format = {
-      enable = mkEnableOption "Typescript/Javascript formatting" // {default = config.vim.languages.enableFormat;};
+      enable = mkEnableOption "Typescript/Javascript formatting" // {
+        default = config.vim.languages.enableFormat;
+      };
 
       type = mkOption {
         description = "Typescript/Javascript formatter to use";
@@ -153,7 +221,9 @@ in {
     };
 
     extraDiagnostics = {
-      enable = mkEnableOption "extra Typescript/Javascript diagnostics" // {default = config.vim.languages.enableExtraDiagnostics;};
+      enable = mkEnableOption "extra Typescript/Javascript diagnostics" // {
+        default = config.vim.languages.enableExtraDiagnostics;
+      };
 
       types = diagnostics {
         langDesc = "Typescript/Javascript";
@@ -186,7 +256,10 @@ in {
   config = mkIf cfg.enable (mkMerge [
     (mkIf cfg.treesitter.enable {
       vim.treesitter.enable = true;
-      vim.treesitter.grammars = [cfg.treesitter.tsPackage cfg.treesitter.jsPackage];
+      vim.treesitter.grammars = [
+        cfg.treesitter.tsPackage
+        cfg.treesitter.jsPackage
+      ];
     })
 
     (mkIf cfg.lsp.enable {
@@ -198,9 +271,9 @@ in {
       vim.formatter.conform-nvim = {
         enable = true;
         setupOpts = {
-          formatters_by_ft.typescript = [cfg.format.type];
+          formatters_by_ft.typescript = [ cfg.format.type ];
           # .tsx files
-          formatters_by_ft.typescriptreact = [cfg.format.type];
+          formatters_by_ft.typescriptreact = [ cfg.format.type ];
           formatters.${cfg.format.type} = {
             command = getExe cfg.format.package;
           };
@@ -214,15 +287,15 @@ in {
         linters_by_ft.typescript = cfg.extraDiagnostics.types;
         linters_by_ft.typescriptreact = cfg.extraDiagnostics.types;
 
-        linters =
-          mkMerge (map (name: {${name} = diagnosticsProviders.${name}.config;})
-            cfg.extraDiagnostics.types);
+        linters = mkMerge (
+          map (name: { ${name} = diagnosticsProviders.${name}.config; }) cfg.extraDiagnostics.types
+        );
       };
     })
 
     # Extensions
     (mkIf cfg.extensions."ts-error-translator".enable {
-      vim.startPlugins = ["ts-error-translator-nvim"];
+      vim.startPlugins = [ "ts-error-translator-nvim" ];
       vim.pluginRC.ts-error-translator = entryAnywhere ''
         require("ts-error-translator").setup(${toLuaObject cfg.extensions.ts-error-translator.setupOpts})
       '';
