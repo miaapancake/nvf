@@ -28,21 +28,40 @@ let
   servers = {
     ts_ls = {
       package = pkgs.typescript-language-server;
-      lspConfig = ''
-        lspconfig.ts_ls.setup {
-          capabilities = capabilities,
-          on_attach = function(client, bufnr)
-            attach_keymaps(client, bufnr);
-            client.server_capabilities.documentFormattingProvider = false;
-          end,
-          cmd = ${
-            if isList cfg.lsp.package then
-              expToLua cfg.lsp.package
-            else
-              ''{"${cfg.lsp.package}/bin/typescript-language-server", "--stdio"}''
+      lspConfig =
+        # lua
+        ''
+          local vue_language_server_path = '${
+            pkgs.vue-language-server + "/lib/node_modules/@vue/language-server"
+          }'
+
+          local vue_plugin = {
+              name = '@vue/typescript-plugin',
+              location = vue_language_server_path,
+              languages = { 'vue' },
+              configNamespace = 'typescript',
           }
-        }
-      '';
+
+          lspconfig.ts_ls.setup {
+            capabilities = capabilities,
+            init_options = {
+              plugins = {
+                vue_plugin
+              }
+            }
+            filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+            on_attach = function(client, bufnr)
+              attach_keymaps(client, bufnr);
+              client.server_capabilities.documentFormattingProvider = false;
+            end,
+            cmd = ${
+              if isList cfg.lsp.package then
+                expToLua cfg.lsp.package
+              else
+                ''{"${cfg.lsp.package}/bin/typescript-language-server", "--stdio"}''
+            }
+          }
+        '';
     };
 
     vtsls = {
