@@ -90,7 +90,7 @@ let
           vim.lsp.config('vue_ls', {
             cmd = {"${getExe pkgs.vue-language-server}", "--stdio"}
           })
-          vim.lsp.enable({'vtsls', 'vue_ls'})
+          vim.lsp.enable({'vue_ls', 'vtsls'})
         '';
     };
 
