@@ -48,7 +48,7 @@ let
               plugins = {
                 vue_plugin
               }
-            }
+            },
             filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
             on_attach = function(client, bufnr)
               attach_keymaps(client, bufnr);
