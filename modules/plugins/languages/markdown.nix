@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (builtins) attrNames;
-  inherit (lib.meta) getExe;
+  inherit (lib.meta) getExe getExe';
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.options) mkEnableOption mkOption;
   inherit (lib.types) bool enum listOf str nullOr;
@@ -31,6 +31,13 @@
       filetypes = ["markdown"];
       root_markers = [".git" ".obsidian" ".moxide.toml"];
     };
+
+    rumdl = {
+      enable = true;
+      cmd = [(getExe pkgs.rumdl) "server"];
+      filetypes = ["markdown"];
+      root_markers = [".git" ".rumdl.toml" "rumdl.toml" ".config/rumdl.toml" "pyproject.toml"];
+    };
   };
 
   defaultFormat = ["deno_fmt"];
@@ -42,14 +49,29 @@
     deno_fmt = {
       command = getExe pkgs.deno;
     };
+    rumdl = {
+      command = getExe pkgs.rumdl;
+    };
     prettierd = {
       command = getExe pkgs.prettierd;
+    };
+    mdformat = {
+      command = getExe' (pkgs.python313Packages.python.withPackages (p:
+        with p; [
+          mdformat
+          mdformat-gfm
+          mdformat-frontmatter
+          mdformat-footnote
+        ])) "mdformat";
     };
   };
   defaultDiagnosticsProvider = ["markdownlint-cli2"];
   diagnosticsProviders = {
     markdownlint-cli2 = {
       package = pkgs.markdownlint-cli2;
+    };
+    rumdl = {
+      package = pkgs.rumdl;
     };
   };
 in {
@@ -63,7 +85,7 @@ in {
         description = "Enable Markdown treesitter";
       };
       mdPackage = mkGrammarOption pkgs "markdown";
-      mdInlinePackage = mkGrammarOption pkgs "markdown-inline";
+      mdInlinePackage = mkGrammarOption pkgs "markdown_inline";
     };
 
     lsp = {
